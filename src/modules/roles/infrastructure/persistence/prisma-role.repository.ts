@@ -4,7 +4,10 @@ import { PrismaService } from '../../../../database/prisma/prisma.service.js';
 import { Prisma } from '../../../../generated/prisma/client.js';
 import type { PaginatedResult } from '../../../../shared/domain/pagination.js';
 import { Role } from '../../domain/entities/role.entity.js';
-import { RoleAlreadyExistsException } from '../../domain/exceptions/role.exceptions.js';
+import {
+  RoleAlreadyExistsException,
+  RoleAssignedToUsersException,
+} from '../../domain/exceptions/role.exceptions.js';
 import {
   RoleListParams,
   RoleRepository,
@@ -13,6 +16,7 @@ import { RoleId, RoleName } from '../../domain/value-objects/index.js';
 import { PrismaRoleMapper, ROLE_INCLUDE } from './prisma-role.mapper.js';
 
 const UNIQUE_CONSTRAINT_VIOLATION = 'P2002';
+const FOREIGN_KEY_VIOLATION = 'P2003';
 
 @Injectable()
 export class PrismaRoleRepository implements RoleRepository {
@@ -58,6 +62,15 @@ export class PrismaRoleRepository implements RoleRepository {
     return raw ? PrismaRoleMapper.toDomain(raw) : null;
   }
 
+  async findByIds(ids: RoleId[]): Promise<Role[]> {
+    if (!ids.length) return [];
+    const rows = await this.prisma.role.findMany({
+      where: { id: { in: ids.map((id) => id.value) } },
+      include: ROLE_INCLUDE,
+    });
+    return rows.map((row) => PrismaRoleMapper.toDomain(row));
+  }
+
   async findByName(name: RoleName): Promise<Role | null> {
     const raw = await this.prisma.role.findFirst({
       where: { name: { equals: name.value, mode: 'insensitive' } },
@@ -91,6 +104,17 @@ export class PrismaRoleRepository implements RoleRepository {
   }
 
   async delete(id: RoleId): Promise<void> {
-    await this.prisma.role.delete({ where: { id: id.value } });
+    try {
+      await this.prisma.role.delete({ where: { id: id.value } });
+    } catch (error) {
+      // user_roles has ON DELETE RESTRICT: the role is still assigned.
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === FOREIGN_KEY_VIOLATION
+      ) {
+        throw new RoleAssignedToUsersException(id.value);
+      }
+      throw error;
+    }
   }
 }

@@ -11,6 +11,7 @@ import {
   InvalidRoleIdException,
   InvalidRoleNameException,
   RoleAlreadyExistsException,
+  RoleAssignedToUsersException,
   RoleNotFoundException,
   RolePermissionsNotFoundException,
   RoleWithoutPermissionsException,
@@ -26,6 +27,7 @@ const ROLE_EXCEPTION_STATUS: ExceptionStatusMap = new Map<Function, HttpStatus>(
     [RoleNotFoundException, HttpStatus.NOT_FOUND],
     [RolePermissionsNotFoundException, HttpStatus.NOT_FOUND],
     [RoleAlreadyExistsException, HttpStatus.CONFLICT],
+    [RoleAssignedToUsersException, HttpStatus.CONFLICT],
   ],
 );
 

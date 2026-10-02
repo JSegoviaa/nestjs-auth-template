@@ -72,6 +72,10 @@ class InMemoryRoleRepository implements RoleRepository {
     return Promise.resolve(this.store.get(id.value) ?? null);
   }
 
+  findByIds(ids: RoleId[]): Promise<Role[]> {
+    return Promise.resolve(ids.flatMap((id) => this.store.get(id.value) ?? []));
+  }
+
   findByName(name: RoleName): Promise<Role | null> {
     const found = [...this.store.values()].find(
       (r) => r.name.value.toLowerCase() === name.value.toLowerCase(),

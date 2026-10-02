@@ -13,6 +13,7 @@ export type RoleListParams = ListParams<RoleOrderBy>;
 export abstract class RoleRepository {
   abstract save(role: Role): Promise<void>;
   abstract findById(id: RoleId): Promise<Role | null>;
+  abstract findByIds(ids: RoleId[]): Promise<Role[]>;
   abstract findByName(name: RoleName): Promise<Role | null>;
   abstract findAll(params: RoleListParams): Promise<PaginatedResult<Role>>;
   abstract delete(id: RoleId): Promise<void>;

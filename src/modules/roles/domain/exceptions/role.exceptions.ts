@@ -30,6 +30,12 @@ export class RoleAlreadyExistsException extends DomainException {
   }
 }
 
+export class RoleAssignedToUsersException extends DomainException {
+  constructor(id: string) {
+    super(`Role with id "${id}" is assigned to users and cannot be deleted`);
+  }
+}
+
 export class RoleWithoutPermissionsException extends DomainException {
   constructor() {
     super('A role must have at least one permission');
