@@ -8,3 +8,13 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+model Permission {
+  id          String   @id @db.Uuid
+  name        String   @unique @db.VarChar(100)
+  description String?  @db.VarChar(255)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("permissions")
+}
