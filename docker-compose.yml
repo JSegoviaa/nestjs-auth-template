@@ -1,0 +1,14 @@
+
+services:
+  database:
+    image: postgres:18.6
+    restart: always
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_PASSWORD: PASWWORD
+      POSTGRES_DB: CMS
+      PGDATA: /var/lib/postgresql/data/pgdata
+    container_name: cms
+    volumes:
+      - ./postgres:/var/lib/postgresql
