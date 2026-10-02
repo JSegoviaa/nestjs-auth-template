@@ -15,13 +15,10 @@ export type PermissionOrderBy = (typeof PERMISSION_ORDER_BY_FIELDS)[number];
 
 export type PermissionListParams = ListParams<PermissionOrderBy>;
 
-/**
- * Output port. Declared as an abstract class so it can be used as a
- * NestJS injection token while staying framework-agnostic.
- */
 export abstract class PermissionRepository {
   abstract save(permission: Permission): Promise<void>;
   abstract findById(id: PermissionId): Promise<Permission | null>;
+  abstract findByIds(ids: PermissionId[]): Promise<Permission[]>;
   abstract findByName(name: PermissionName): Promise<Permission | null>;
   abstract findAll(
     params: PermissionListParams,

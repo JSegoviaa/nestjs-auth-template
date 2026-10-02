@@ -48,6 +48,14 @@ export class PrismaPermissionRepository implements PermissionRepository {
     return raw ? PrismaPermissionMapper.toDomain(raw) : null;
   }
 
+  async findByIds(ids: PermissionId[]): Promise<Permission[]> {
+    if (!ids.length) return [];
+    const rows = await this.prisma.permission.findMany({
+      where: { id: { in: ids.map((id) => id.value) } },
+    });
+    return rows.map((row) => PrismaPermissionMapper.toDomain(row));
+  }
+
   async findByName(name: PermissionName): Promise<Permission | null> {
     const raw = await this.prisma.permission.findUnique({
       where: { name: name.value },

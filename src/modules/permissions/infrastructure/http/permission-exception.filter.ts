@@ -1,12 +1,10 @@
-import {
-  ArgumentsHost,
-  Catch,
-  ExceptionFilter,
-  HttpStatus,
-} from '@nestjs/common';
-import type { Response } from 'express';
+import { Catch, HttpStatus } from '@nestjs/common';
 
 import { DomainException } from '../../../../shared/domain/domain.exception.js';
+import {
+  DomainExceptionFilter,
+  type ExceptionStatusMap,
+} from '../../../../shared/infrastructure/http/domain-exception.filter.js';
 import {
   InvalidPermissionDescriptionException,
   InvalidPermissionIdException,
@@ -15,7 +13,10 @@ import {
   PermissionNotFoundException,
 } from '../../domain/exceptions/permission.exceptions.js';
 
-const STATUS_BY_EXCEPTION = new Map<Function, HttpStatus>([
+const PERMISSION_EXCEPTION_STATUS: ExceptionStatusMap = new Map<
+  Function,
+  HttpStatus
+>([
   [InvalidPermissionIdException, HttpStatus.BAD_REQUEST],
   [InvalidPermissionNameException, HttpStatus.BAD_REQUEST],
   [InvalidPermissionDescriptionException, HttpStatus.BAD_REQUEST],
@@ -23,19 +24,7 @@ const STATUS_BY_EXCEPTION = new Map<Function, HttpStatus>([
   [PermissionAlreadyExistsException, HttpStatus.CONFLICT],
 ]);
 
-/** Translates domain exceptions into HTTP responses. */
 @Catch(DomainException)
-export class PermissionExceptionFilter implements ExceptionFilter {
-  catch(exception: DomainException, host: ArgumentsHost): void {
-    const response = host.switchToHttp().getResponse<Response>();
-    const status =
-      STATUS_BY_EXCEPTION.get(exception.constructor) ??
-      HttpStatus.UNPROCESSABLE_ENTITY;
-
-    response.status(status).json({
-      statusCode: status,
-      error: exception.name,
-      message: exception.message,
-    });
-  }
+export class PermissionExceptionFilter extends DomainExceptionFilter {
+  protected readonly statusByException = PERMISSION_EXCEPTION_STATUS;
 }

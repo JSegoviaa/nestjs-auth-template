@@ -27,6 +27,10 @@ class InMemoryPermissionRepository implements PermissionRepository {
     return Promise.resolve(this.store.get(id.value) ?? null);
   }
 
+  findByIds(ids: PermissionId[]): Promise<Permission[]> {
+    return Promise.resolve(ids.flatMap((id) => this.store.get(id.value) ?? []));
+  }
+
   findByName(name: PermissionName): Promise<Permission | null> {
     const found = [...this.store.values()].find((p) => p.name.equals(name));
     return Promise.resolve(found ?? null);
