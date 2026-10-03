@@ -1,7 +1,7 @@
 import { ArgumentsHost, ExceptionFilter, HttpStatus } from '@nestjs/common';
-import type { Response } from 'express';
 
 import { DomainException } from '../../domain/domain.exception.js';
+import { sendErrorResponse } from './error-response.js';
 
 export type ExceptionStatusMap = ReadonlyMap<Function, HttpStatus>;
 
@@ -13,15 +13,12 @@ export abstract class DomainExceptionFilter implements ExceptionFilter {
   protected abstract readonly statusByException: ExceptionStatusMap;
 
   catch(exception: DomainException, host: ArgumentsHost): void {
-    const response = host.switchToHttp().getResponse<Response>();
-    const status =
-      this.statusByException.get(exception.constructor) ??
-      HttpStatus.UNPROCESSABLE_ENTITY;
-
-    response.status(status).json({
-      statusCode: status,
-      error: exception.name,
-      message: exception.message,
+    sendErrorResponse(host, {
+      status:
+        this.statusByException.get(exception.constructor) ??
+        HttpStatus.UNPROCESSABLE_ENTITY,
+      errorCode: exception.code,
+      errors: [exception.message],
     });
   }
 }
