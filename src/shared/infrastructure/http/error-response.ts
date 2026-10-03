@@ -38,6 +38,8 @@ export function sendErrorResponse(
     timestamp: new Date().toISOString(),
   };
 
+  // Picked up by the request logger (see logging/pino-http.options.ts).
+  response.locals.error = { errorCode, errors };
   response.status(status).json(body);
   return body;
 }

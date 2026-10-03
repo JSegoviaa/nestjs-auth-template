@@ -14,7 +14,7 @@ import { RequestValidationException } from './request-validation.exception.js';
 const REQUEST_ID = '019a0000-0000-7000-8000-000000000000';
 
 const hostFor = () => {
-  const response = { status: vi.fn(), json: vi.fn() };
+  const response = { status: vi.fn(), json: vi.fn(), locals: {} };
   response.status.mockReturnValue(response);
   const request = {
     requestId: REQUEST_ID,

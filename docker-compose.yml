@@ -12,3 +12,32 @@ services:
     container_name: cms
     volumes:
       - ./postgres:/var/lib/postgresql
+
+
+  logs-bucket:
+    image: rustfs/rustfs:1.0.0
+    restart: always
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    environment:
+      RUSTFS_ACCESS_KEY: cms-local
+      RUSTFS_SECRET_KEY: cms-local-secret
+      RUSTFS_CONSOLE_ENABLE: 'true'
+    volumes:
+      - logs-bucket-data:/data
+
+  logs-bucket-init:
+    image: amazon/aws-cli:2.37.9
+    depends_on:
+      - logs-bucket
+    environment:
+      AWS_ACCESS_KEY_ID: cms-local
+      AWS_SECRET_ACCESS_KEY: cms-local-secret
+      AWS_DEFAULT_REGION: us-east-1
+    entrypoint: >
+      sh -c 'until aws --endpoint-url http://logs-bucket:9000 s3api head-bucket --bucket cms-logs 2>/dev/null
+      || aws --endpoint-url http://logs-bucket:9000 s3api create-bucket --bucket cms-logs; do sleep 2; done'
+
+volumes:
+  logs-bucket-data:
