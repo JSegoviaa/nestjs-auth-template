@@ -29,6 +29,7 @@ import {
 import { UserRolesService } from '../services/user-roles.service.js';
 import { ChangeUserStatusUseCase } from './change-user-status.use-case.js';
 import { CreateUserUseCase } from './create-user.use-case.js';
+import { EnsureRootUserUseCase } from './ensure-root-user.use-case.js';
 import { GetUserUseCase } from './get-user.use-case.js';
 import { ListUsersUseCase } from './list-users.use-case.js';
 import { UpdateUserUseCase } from './update-user.use-case.js';
@@ -261,5 +262,46 @@ describe('User use cases', () => {
       ['Zoe', 'Admin'],
     ]);
     expect(result.meta.total).toBe(2);
+  });
+
+  describe('EnsureRootUserUseCase', () => {
+    let ensure: EnsureRootUserUseCase;
+    const command = () => ({
+      email: 'root@company.local',
+      password: 'Password1!',
+      firstName: 'Root',
+      lastName: 'User',
+      rootRoleId: RoleId.fromString(adminId),
+    });
+
+    beforeEach(() => {
+      ensure = new EnsureRootUserUseCase(users, new FakePasswordHasher());
+    });
+
+    it('creates the root user once, with a hashed password', async () => {
+      await expect(ensure.execute(command())).resolves.toBe('created');
+      await expect(ensure.execute(command())).resolves.toBe('unchanged');
+
+      const [root] = users.store.values();
+      expect(users.store.size).toBe(1);
+      expect(root.password.value).toBe('hashed:Password1!');
+    });
+
+    it('gives an existing user the ROOT role without touching the rest', async () => {
+      const existing = await create.execute(
+        validUser({ email: 'root@company.local', roleIds: [editorId] }),
+      );
+
+      await expect(
+        ensure.execute({ ...command(), password: 'Other1!' }),
+      ).resolves.toBe('role-assigned');
+
+      const updated = users.store.get(existing.id)!;
+      expect(updated.roleIds.map((id) => id.value).sort()).toEqual(
+        [adminId, editorId].sort(),
+      );
+      // Its password is never overwritten.
+      expect(updated.password.value).toBe('hashed:Password1!');
+    });
   });
 });

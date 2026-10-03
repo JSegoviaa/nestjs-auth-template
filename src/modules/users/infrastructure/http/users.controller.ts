@@ -9,6 +9,8 @@ import {
   UseFilters,
 } from '@nestjs/common';
 
+import { AuthPermission } from '../../../auth/infrastructure/http/decorators/index.js';
+import { PermissionCode } from '../../../permissions/domain/catalog/index.js';
 import type { PaginatedResponse } from '../../../../shared/application/pagination.js';
 import { UserResponse } from '../../application/dtos/user.response.js';
 import {
@@ -38,6 +40,7 @@ export class UsersController {
   ) {}
 
   @Post()
+  @AuthPermission(PermissionCode.USER_CREATE)
   create(@Body() dto: CreateUserDto): Promise<UserResponse> {
     return this.createUser.execute({
       firstName: dto.firstName,
@@ -50,6 +53,7 @@ export class UsersController {
   }
 
   @Get()
+  @AuthPermission(PermissionCode.USER_READ)
   findAll(
     @Query() query: ListUsersDto,
   ): Promise<PaginatedResponse<UserResponse>> {
@@ -57,11 +61,13 @@ export class UsersController {
   }
 
   @Get(':id')
+  @AuthPermission(PermissionCode.USER_READ)
   findOne(@Param('id') id: string): Promise<UserResponse> {
     return this.getUser.execute(id);
   }
 
   @Patch(':id')
+  @AuthPermission(PermissionCode.USER_UPDATE)
   update(
     @Param('id') id: string,
     @Body() dto: UpdateUserDto,
@@ -77,6 +83,7 @@ export class UsersController {
   }
 
   @Patch(':id/status')
+  @AuthPermission(PermissionCode.USER_UPDATE_STATUS)
   changeStatus(
     @Param('id') id: string,
     @Body() dto: ChangeUserStatusDto,

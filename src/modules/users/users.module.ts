@@ -6,6 +6,7 @@ import { UserRolesService } from './application/services/user-roles.service.js';
 import {
   ChangeUserStatusUseCase,
   CreateUserUseCase,
+  EnsureRootUserUseCase,
   GetUserUseCase,
   ListUsersUseCase,
   UpdateUserUseCase,
@@ -45,6 +46,12 @@ const applicationProviders: Provider[] = [
       new UseCase(repository, userRoles),
     inject: [UserRepository, UserRolesService],
   })),
+  {
+    provide: EnsureRootUserUseCase,
+    useFactory: (repository: UserRepository, passwordHasher: PasswordHasher) =>
+      new EnsureRootUserUseCase(repository, passwordHasher),
+    inject: [UserRepository, PasswordHasher],
+  },
 ];
 
 @Module({
@@ -56,6 +63,6 @@ const applicationProviders: Provider[] = [
     { provide: PasswordHasher, useClass: Argon2PasswordHasher },
     ...applicationProviders,
   ],
-  exports: [UserRepository, PasswordHasher],
+  exports: [UserRepository, PasswordHasher, EnsureRootUserUseCase],
 })
 export class UsersModule {}

@@ -5,7 +5,6 @@ import { ListPermissionsUseCase } from './application/use-cases/list-permissions
 import { SyncPermissionsUseCase } from './application/use-cases/sync-permissions.use-case.js';
 import { PERMISSION_DEFINITIONS } from './domain/catalog/index.js';
 import { PermissionRepository } from './domain/repositories/permission.repository.js';
-import { PermissionsSyncInitializer } from './infrastructure/bootstrap/permissions-sync.initializer.js';
 import { PermissionsController } from './infrastructure/http/permissions.controller.js';
 import { PrismaPermissionRepository } from './infrastructure/persistence/prisma-permission.repository.js';
 
@@ -30,8 +29,7 @@ const useCaseProviders: Provider[] = [
   providers: [
     { provide: PermissionRepository, useClass: PrismaPermissionRepository },
     ...useCaseProviders,
-    PermissionsSyncInitializer,
   ],
-  exports: [PermissionRepository],
+  exports: [PermissionRepository, SyncPermissionsUseCase],
 })
 export class PermissionsModule {}

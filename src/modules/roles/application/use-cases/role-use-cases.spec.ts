@@ -24,6 +24,10 @@ import { RoleId, RoleName } from '../../domain/value-objects/index.js';
 import { RolePermissionsService } from '../services/role-permissions.service.js';
 import { CreateRoleUseCase } from './create-role.use-case.js';
 import { DeleteRoleUseCase } from './delete-role.use-case.js';
+import {
+  EnsureRootRoleUseCase,
+  ROOT_ROLE_NAME,
+} from './ensure-root-role.use-case.js';
 import { GetRoleUseCase } from './get-role.use-case.js';
 import { ListRolesUseCase } from './list-roles.use-case.js';
 import { UpdateRoleUseCase } from './update-role.use-case.js';
@@ -214,5 +218,51 @@ describe('Role use cases', () => {
     await remove.execute(id);
 
     await expect(get.execute(id)).rejects.toThrow(RoleNotFoundException);
+  });
+
+  describe('EnsureRootRoleUseCase', () => {
+    const ensure = () =>
+      new EnsureRootRoleUseCase(roles, permissions, [
+        'USERS_READ',
+        'USERS_WRITE',
+      ]).execute();
+
+    it('creates ROOT with every permission, then does nothing', async () => {
+      const first = await ensure();
+      expect(first).toMatchObject({ created: true, permissionsUpdated: true });
+
+      const root = await get.execute(first.roleId.value);
+      expect(root.name).toBe(ROOT_ROLE_NAME);
+      expect(root.permissions.map((p) => p.id).sort()).toEqual(
+        [readId, writeId].sort(),
+      );
+
+      await expect(ensure()).resolves.toMatchObject({
+        created: false,
+        permissionsUpdated: false,
+      });
+    });
+
+    it('gives an existing ROOT role every permission', async () => {
+      const { id } = await create.execute({
+        name: 'root',
+        permissionIds: [readId],
+      });
+
+      const result = await ensure();
+
+      expect(result).toMatchObject({
+        created: false,
+        permissionsUpdated: true,
+      });
+      expect(result.roleId.value).toBe(id);
+      expect((await get.execute(id)).permissions).toHaveLength(2);
+    });
+
+    it('fails if the permissions were not synced first', async () => {
+      await expect(
+        new EnsureRootRoleUseCase(roles, permissions, ['NOT_SYNCED']).execute(),
+      ).rejects.toThrow('NOT_SYNCED');
+    });
   });
 });

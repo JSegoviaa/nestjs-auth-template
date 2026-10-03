@@ -1,11 +1,13 @@
 import { Module, Provider } from '@nestjs/common';
 
+import { PermissionCode } from '../permissions/domain/catalog/index.js';
 import { PermissionRepository } from '../permissions/domain/repositories/index.js';
 import { PermissionsModule } from '../permissions/permissions.module.js';
 import { RolePermissionsService } from './application/services/role-permissions.service.js';
 import {
   CreateRoleUseCase,
   DeleteRoleUseCase,
+  EnsureRootRoleUseCase,
   GetRoleUseCase,
   ListRolesUseCase,
   UpdateRoleUseCase,
@@ -42,6 +44,19 @@ const applicationProviders: Provider[] = [
       new DeleteRoleUseCase(repository),
     inject: [RoleRepository],
   },
+  {
+    provide: EnsureRootRoleUseCase,
+    useFactory: (
+      repository: RoleRepository,
+      permissionRepository: PermissionRepository,
+    ) =>
+      new EnsureRootRoleUseCase(
+        repository,
+        permissionRepository,
+        Object.values(PermissionCode),
+      ),
+    inject: [RoleRepository, PermissionRepository],
+  },
 ];
 
 @Module({
@@ -52,6 +67,6 @@ const applicationProviders: Provider[] = [
     { provide: RoleRepository, useClass: PrismaRoleRepository },
     ...applicationProviders,
   ],
-  exports: [RoleRepository],
+  exports: [RoleRepository, EnsureRootRoleUseCase],
 })
 export class RolesModule {}

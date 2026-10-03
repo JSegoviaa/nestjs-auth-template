@@ -12,6 +12,8 @@ import {
   UseFilters,
 } from '@nestjs/common';
 
+import { AuthPermission } from '../../../auth/infrastructure/http/decorators/index.js';
+import { PermissionCode } from '../../../permissions/domain/catalog/index.js';
 import type { PaginatedResponse } from '../../../../shared/application/pagination.js';
 import { RoleResponse } from '../../application/dtos/role.response.js';
 import {
@@ -36,6 +38,7 @@ export class RolesController {
   ) {}
 
   @Post()
+  @AuthPermission(PermissionCode.ROLE_CREATE)
   create(@Body() dto: CreateRoleDto): Promise<RoleResponse> {
     return this.createRole.execute({
       name: dto.name,
@@ -45,6 +48,7 @@ export class RolesController {
   }
 
   @Get()
+  @AuthPermission(PermissionCode.ROLE_READ)
   findAll(
     @Query() query: ListRolesDto,
   ): Promise<PaginatedResponse<RoleResponse>> {
@@ -52,11 +56,13 @@ export class RolesController {
   }
 
   @Get(':id')
+  @AuthPermission(PermissionCode.ROLE_READ)
   findOne(@Param('id') id: string): Promise<RoleResponse> {
     return this.getRole.execute(id);
   }
 
   @Patch(':id')
+  @AuthPermission(PermissionCode.ROLE_UPDATE)
   update(
     @Param('id') id: string,
     @Body() dto: UpdateRoleDto,
@@ -70,6 +76,7 @@ export class RolesController {
   }
 
   @Delete(':id')
+  @AuthPermission(PermissionCode.ROLE_DELETE)
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(@Param('id') id: string): Promise<void> {
     return this.deleteRole.execute(id);

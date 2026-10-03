@@ -58,7 +58,8 @@ model User {
   createdAt     DateTime  @default(now()) @map("created_at")
   updatedAt     DateTime  @updatedAt @map("updated_at")
 
-  roles UserRole[]
+  roles         UserRole[]
+  refreshTokens RefreshToken[]
 
   @@map("users")
 }
@@ -74,4 +75,19 @@ model UserRole {
   @@id([userId, roleId])
   @@index([roleId])
   @@map("user_roles")
+}
+
+/// One row per issued refresh token. Only its SHA-256 hash is stored.
+model RefreshToken {
+  id        String    @id @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  tokenHash String    @map("token_hash") @db.Char(64)
+  expiresAt DateTime  @map("expires_at")
+  revokedAt DateTime? @map("revoked_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("refresh_tokens")
 }
